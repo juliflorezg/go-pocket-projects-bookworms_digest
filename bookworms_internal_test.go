@@ -87,8 +87,63 @@ func equalBooks(t *testing.T, books, targetBooks []Book) bool {
 		return false
 	}
 
-	for i, _ := range targetBooks {
+	for i := range targetBooks {
 		if targetBooks[i] != books[i] {
+			return false
+		}
+	}
+
+	return true
+}
+
+func TestBooksCount(t *testing.T) {
+
+	type testCase struct {
+		bookworms []Bookworm
+		want      map[Book]uint
+		// got       map[Book]uint
+	}
+
+	tests := map[string]testCase{
+		"2 exact book counts": {
+			bookworms: []Bookworm{
+				{Name: "Fadi", Books: []Book{handmaidsTale, theBellJar}},
+				{Name: "Peggy", Books: []Book{oryxAndCrake, handmaidsTale, janeEyre}},
+			},
+			want: map[Book]uint{
+				handmaidsTale: 2,
+				theBellJar:    1,
+				oryxAndCrake:  1,
+				janeEyre:      1,
+			},
+		},
+
+		// TODO: fill with more test cases
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+
+			got := booksCount(tc.bookworms)
+
+			if !equalBooksCount(t, got, tc.want) {
+				t.Fatalf("Book count is not equal, got: %+v, want: %+v", got, tc.want)
+			}
+		})
+	}
+}
+
+func equalBooksCount(t *testing.T, got, want map[Book]uint) bool {
+	t.Helper()
+
+	if len(got) != len(want) {
+		return false
+	}
+
+	for book, targetCount := range want {
+		count, ok := got[book]
+
+		if !ok || targetCount != count {
 			return false
 		}
 	}
