@@ -38,3 +38,15 @@ func loadBookworms(filePath string) ([]Bookworm, error) {
 
 	return bookworms, nil
 }
+
+func booksCount(bookworms []Bookworm) map[Book]uint {
+	count := make(map[Book]uint)
+
+	for _, bookworms := range bookworms {
+		for _, book := range bookworms.Books {
+			count[book]++
+		}
+	}
+
+	return count
+}
