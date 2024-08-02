@@ -4,9 +4,10 @@ import "testing"
 
 var (
 	handmaidsTale = Book{Author: "Margaret Atwood", Title: "The Handmaid's Tale"}
+	janeEyre      = Book{Author: "Charlotte Brontë", Title: "Jane Eyre"}
 	oryxAndCrake  = Book{Author: "Margaret Atwood", Title: "Oryx and Crake"}
 	theBellJar    = Book{Author: "Sylvia Plath", Title: "The Bell Jar"}
-	janeEyre      = Book{Author: "Charlotte Brontë", Title: "Jane Eyre"}
+	villette      = Book{Author: "Charlotte Brontë", Title: "Villette"}
 )
 
 func TestLoadBookworms(t *testing.T) {
@@ -117,8 +118,34 @@ func TestBooksCount(t *testing.T) {
 				janeEyre:      1,
 			},
 		},
-
 		// TODO: fill with more test cases
+		"no bookworms": {
+			bookworms: []Bookworm{},
+			want:      map[Book]uint{},
+		},
+		"bookworm with no books": {
+			bookworms: []Bookworm{
+				{Name: "Fadi", Books: []Book{oryxAndCrake, handmaidsTale, janeEyre}},
+				{Name: "Peggy", Books: []Book{}},
+			},
+			want: map[Book]uint{
+				oryxAndCrake:  1,
+				handmaidsTale: 1,
+				janeEyre:      1,
+			},
+		},
+		"bookworm with two of the same book": {
+			bookworms: []Bookworm{
+				{Name: "Fadi", Books: []Book{handmaidsTale, theBellJar}},
+				{Name: "Peggy", Books: []Book{oryxAndCrake, handmaidsTale, janeEyre, handmaidsTale}},
+			},
+			want: map[Book]uint{
+				handmaidsTale: 3,
+				theBellJar:    1,
+				oryxAndCrake:  1,
+				janeEyre:      1,
+			},
+		},
 	}
 
 	for name, tc := range tests {
@@ -144,6 +171,94 @@ func equalBooksCount(t *testing.T, got, want map[Book]uint) bool {
 		count, ok := got[book]
 
 		if !ok || targetCount != count {
+			return false
+		}
+	}
+
+	return true
+}
+
+func TestFindCommonBooks(t *testing.T) {
+	type testCase struct {
+		input []Bookworm
+		want  []Book
+	}
+
+	tests := map[string]testCase{
+		"Bookworms have read different books": {
+			input: []Bookworm{
+				{Name: "Fadi", Books: []Book{handmaidsTale, theBellJar}},
+				{Name: "Peggy", Books: []Book{oryxAndCrake, villette, janeEyre}},
+			},
+			want: []Book{},
+		},
+		"Bookworms have read the same exact books": {
+			input: []Bookworm{
+				{Name: "Fadi", Books: []Book{handmaidsTale, theBellJar, oryxAndCrake, villette, janeEyre}},
+				{Name: "Peggy", Books: []Book{handmaidsTale, theBellJar, oryxAndCrake, villette, janeEyre}},
+				{Name: "Carrot", Books: []Book{handmaidsTale, theBellJar, oryxAndCrake, villette, janeEyre}},
+			},
+			want: []Book{
+				handmaidsTale, theBellJar, oryxAndCrake, villette, janeEyre,
+			},
+		},
+		"More than two bookworms have a book in common": {
+			input: []Bookworm{
+				{Name: "Fadi", Books: []Book{handmaidsTale, theBellJar}},
+				{Name: "Peggy", Books: []Book{oryxAndCrake, villette, janeEyre, theBellJar}},
+				{Name: "Vivi", Books: []Book{villette, theBellJar, oryxAndCrake}},
+			},
+			want: []Book{
+				theBellJar, oryxAndCrake, villette,
+			},
+		},
+		"One bookworm has no books": {
+			input: []Bookworm{
+				{Name: "Fadi", Books: []Book{handmaidsTale, theBellJar}},
+				{Name: "Peggy", Books: []Book{}},
+			},
+			want: []Book{},
+		},
+		"Nobody has any books": {
+			input: []Bookworm{
+				{Name: "Fadi", Books: []Book{}},
+				{Name: "Peggy", Books: []Book{}},
+				{Name: "Vivi", Books: []Book{}},
+				{Name: "Carrot", Books: []Book{}},
+			},
+			want: []Book{},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := findCommonBooks(tc.input)
+
+			if !equalCommonBooks(t, got, tc.want) {
+				t.Fatalf("Got different lists for common books\n got: %v \n want: %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func equalCommonBooks(t *testing.T, got, want []Book) bool {
+	t.Helper()
+
+	if len(got) != len(want) {
+		return false
+	}
+
+	for _, b := range want {
+		// starts by assuming the current book is not in <got []Book>, when it's found in got, switch the flag to true and continue with next book to check in <want []Book>
+		isBookInGotResult := false
+		for _, b2 := range got {
+			if b == b2 {
+				isBookInGotResult = true
+				break
+			}
+		}
+
+		if !isBookInGotResult {
 			return false
 		}
 	}
