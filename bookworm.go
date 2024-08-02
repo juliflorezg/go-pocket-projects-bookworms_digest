@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"os"
+	"sort"
 )
 
 // A Bookworm contains the list of books on bookworm's shelf
@@ -65,5 +66,19 @@ func findCommonBooks(bookworms []Bookworm) []Book {
 		}
 	}
 
-	return commonBooks
+	return sortBooks(commonBooks)
+}
+
+// sortBooks sorts the books by Author and then Title.
+func sortBooks(books []Book) []Book {
+	// slices.SortFunc[]()
+	sort.Slice(books, func(i, j int) bool {
+		if books[i].Author != books[j].Author {
+			return books[i].Author < books[j].Author
+		}
+
+		return books[i].Title < books[j].Title
+	})
+
+	return books
 }
