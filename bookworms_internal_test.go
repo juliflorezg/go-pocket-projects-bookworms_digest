@@ -2,12 +2,13 @@ package main
 
 import "testing"
 
+// sorted by author and then title
 var (
-	handmaidsTale = Book{Author: "Margaret Atwood", Title: "The Handmaid's Tale"}
 	janeEyre      = Book{Author: "Charlotte Brontë", Title: "Jane Eyre"}
-	oryxAndCrake  = Book{Author: "Margaret Atwood", Title: "Oryx and Crake"}
-	theBellJar    = Book{Author: "Sylvia Plath", Title: "The Bell Jar"}
 	villette      = Book{Author: "Charlotte Brontë", Title: "Villette"}
+	oryxAndCrake  = Book{Author: "Margaret Atwood", Title: "Oryx and Crake"}
+	handmaidsTale = Book{Author: "Margaret Atwood", Title: "The Handmaid's Tale"}
+	theBellJar    = Book{Author: "Sylvia Plath", Title: "The Bell Jar"}
 )
 
 func TestLoadBookworms(t *testing.T) {
@@ -118,7 +119,6 @@ func TestBooksCount(t *testing.T) {
 				janeEyre:      1,
 			},
 		},
-		// TODO: fill with more test cases
 		"no bookworms": {
 			bookworms: []Bookworm{},
 			want:      map[Book]uint{},
@@ -199,7 +199,7 @@ func TestFindCommonBooks(t *testing.T) {
 				{Name: "Carrot", Books: []Book{handmaidsTale, theBellJar, oryxAndCrake, villette, janeEyre}},
 			},
 			want: []Book{
-				handmaidsTale, theBellJar, oryxAndCrake, villette, janeEyre,
+				janeEyre, villette, oryxAndCrake, handmaidsTale, theBellJar,
 			},
 		},
 		"More than two bookworms have a book in common": {
@@ -209,7 +209,7 @@ func TestFindCommonBooks(t *testing.T) {
 				{Name: "Vivi", Books: []Book{villette, theBellJar, oryxAndCrake}},
 			},
 			want: []Book{
-				theBellJar, oryxAndCrake, villette,
+				villette, oryxAndCrake, theBellJar,
 			},
 		},
 		"One bookworm has no books": {
@@ -234,34 +234,9 @@ func TestFindCommonBooks(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got := findCommonBooks(tc.input)
 
-			if !equalCommonBooks(t, got, tc.want) {
+			if !equalBooks(t, got, tc.want) {
 				t.Fatalf("Got different lists for common books\n got: %v \n want: %v", got, tc.want)
 			}
 		})
 	}
-}
-
-func equalCommonBooks(t *testing.T, got, want []Book) bool {
-	t.Helper()
-
-	if len(got) != len(want) {
-		return false
-	}
-
-	for _, b := range want {
-		// starts by assuming the current book is not in <got []Book>, when it's found in got, switch the flag to true and continue with next book to check in <want []Book>
-		isBookInGotResult := false
-		for _, b2 := range got {
-			if b == b2 {
-				isBookInGotResult = true
-				break
-			}
-		}
-
-		if !isBookInGotResult {
-			return false
-		}
-	}
-
-	return true
 }
